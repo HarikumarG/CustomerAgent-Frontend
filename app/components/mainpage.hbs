@@ -1,0 +1,34 @@
+{{!-- <html>
+<label for="name">Name </label>
+    {{input value=nameInput placeholder="enter name"}}
+<label for="password">Password  </label> 
+    {{input value=passwordInput type="password" placeholder="enter password"}}
+<label for="password">Are u an agent  </label> 
+    {{input value=isAgentInput placeholder="enter true or false"}}
+<button type="button" {{action 'onLogin' on="click" }}>Login</button>
+<br>
+<label for="status">Status: </label>{{this.status}}
+</html> --}}
+<div class="container" >
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Login</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    {{input value=nameInput class="form-control" placeholder="Your User Name"}} <br>
+                    {{input value=passwordInput class="form-control" type="password" placeholder="Your password"}} <br>
+                    <select onchange={{action "dropdown" value="target.value"}} class="form-control">
+                        <option disabled selected>Agent or Customer</option>
+                        <option value="true">Agent</option>
+                        <option value="false">Customer</option>
+                    </select>                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" {{action 'onLogin' on="click" }}>Sign In</button>
+            </div>
+        </div>
+    </div>
+</div>
