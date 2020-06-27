@@ -9,6 +9,7 @@
 <br>
 <label for="status">Status: </label>{{this.status}}
 </html> --}}
+{{#if loginpage}}
 <div class="container" >
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -32,3 +33,38 @@
         </div>
     </div>
 </div>
+{{/if}}
+{{#if chatpage}}
+<div class="container">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="input-group-btn">
+                    <span class="input-group">
+                        <h5 class="form-text text-muted">Status: {{status}}</h5>
+                    </span>
+                    <button type="button" class="btn-danger btn btn-sm" disabled={{canDisconnect}} {{action 'onDisconnect' on="click" }}>Disconnect</button>
+                    <button type="button" class="btn-primary btn btn-sm space" {{action 'onClear' on="click" }}>Clear</button>
+                    <span class="input-group">
+                        <small class="form-text text-muted">Logged in as: {{ name }}</small>
+                    </span>                    
+                </span>
+            </div>
+            <div class="modal-body chat-body">
+                <small class="form-text text-muted date">{{date}}</small>
+                <div class="content">
+                    <div class="messages" id="messages"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="input-group text-message">
+                    {{input value=textInput class="form-control input-sm chat_input" placeholder="your message here..."}}
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-primary" disabled={{canSend}} {{action 'onSend' on="click" }}>Send</button>
+                    </span>                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}

@@ -3,25 +3,99 @@ import { action, computed } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import jQuery from 'jquery'
 import {inject as service} from '@ember/service';
-import Validator from '../models/validator';
-import Ember from 'ember';
 
 export default class MainpageComponent extends Component {
     @service ('websockets') websockets;
-    @tracked status = "Enter login credentials";
+    @tracked status = "Logged in";
+    @tracked loginpage = true;
+    @tracked chatpage = false;
+    @tracked date = null;
+    @tracked canDisconnect = true;
+    @tracked canSend = true;
+    @tracked textInput="";
+    @tracked name = null;
     conn = null;
-    name = null;
     isAgent = null;
     alertbool = true;
+    to = null;
+    time = null;
 
     @action dropdown(value) {
         this.isAgentInput = value;
     }
     @action onLogin() {
-        console.log(this.nameInput);
-        console.log(this.passwordInput);
-        console.log(this.isAgentInput);
-        //this.sendReq();
+        if(this.nameInput != undefined && this.passwordInput != undefined && this.isAgentInput != undefined) {
+            setInterval(() => {
+                var d = new Date();    
+                this.date = d.toDateString(); 
+                this.time = d.getHours()+":"+d.getMinutes();
+            }, 1000);
+            this.sendReq();
+        } else {
+            alert("Fill all the fields");
+            location.reload();
+        }
+    }
+    @action onSend() {
+        var val = this.textInput;
+        if(val.length > 0) {
+            this.textInput = "";
+            let packet = {
+               type:"message",
+                isAgent:this.isAgent,
+                name:this.name,
+                to:this.to,
+                message:val
+            }
+            this.insertMessagetoDOM(packet,true);
+            this.sendData(packet);
+        }
+    }
+    @action onClear() {
+        document.getElementById("messages").textContent = '';
+    }
+    @action onDisconnect() {
+        if(this.isAgent == false) {
+            this.conn.close();
+        } else {
+            let packet = {
+                type:"leave",
+                isAgent:this.isAgent,
+                name:this.name,
+                to:this.to,
+                message:null
+            }
+            this.sendData(packet);
+        }
+    }
+    insertMessagetoDOM(packet,isFromMe) {
+        console.log("Insert message to DOM ",packet,isFromMe);
+        const chatArea = document.querySelector("#messages");
+        let message = document.createElement('div');
+        message.classList.add("message");
+        if(isFromMe) {
+            message.classList.add("message--mine");
+        } else {
+            message.classList.add("message--theirs");
+        }
+        let nameEl = document.createElement('div');
+        nameEl.classList.add("message__name");
+        var t = document.createTextNode(packet.name);
+        nameEl.appendChild(t);
+        let timeEl = document.createElement('small');
+        timeEl.classList.add("form-text");
+        timeEl.classList.add("time");
+        var ti = document.createTextNode(this.time);
+        timeEl.appendChild(ti);
+        let nameCon = document.createElement('div');
+        nameCon.classList.add("message__bubble");
+        var msg = document.createTextNode(packet.message);
+        nameCon.appendChild(msg);
+        nameCon.appendChild(timeEl);
+        message.appendChild(nameEl);
+        message.appendChild(nameCon);
+        chatArea.appendChild(message);
+        chatArea.scrollTop = chatArea.scrollHeight - chatArea.clientHeight;
     }
     sendReq() {
         jQuery.ajax({
@@ -38,6 +112,8 @@ export default class MainpageComponent extends Component {
             console.log(response);
             if(response == "SUCCESS") {
                 this.name = this.nameInput;
+                this.loginpage = false;
+                this.chatpage = true;
                 if(this.isAgentInput == "true") {
                     this.isAgent = true;
                 } else {
@@ -45,7 +121,8 @@ export default class MainpageComponent extends Component {
                 }
                 this.initialize();
             } else {
-                this.status = "Invalid credentials";
+                alert("Invalid credentials");
+                location.reload();
             }
         }).catch(function (error) {
             console.log(error);
@@ -56,11 +133,11 @@ export default class MainpageComponent extends Component {
     initialize() {
         const socket = this.websockets.socketFor('ws://localhost:9090/');
         let packet = {
-                type:"login",
-                isAgent:this.isAgent,
-                name:this.name,
-                to:null,
-                message:null
+            type:"login",
+            isAgent:this.isAgent,
+            name:this.name,
+            to:null,
+            message:null
         }
         socket.on('open',() => {
             console.log("Connected to the server");
@@ -89,11 +166,17 @@ export default class MainpageComponent extends Component {
 
     handlelogin(toName) {
         this.alertbool = false;
+        this.to = toName;
+        this.canDisconnect = false;
+        this.canSend = false;
         this.status = "Connected to "+toName;
     }
     handleleave() {
         if(this.isAgent == true) {
             this.alertbool = true;
+            this.to = null;
+            this.canDisconnect = true;
+            this.canSend = true;
             this.status = "Wait for Customer to Connect";
         } else {
             alert("Agent disconnected...\nTry back after some time");
@@ -102,7 +185,7 @@ export default class MainpageComponent extends Component {
     }
     handlenouser() {
         if(this.isAgent == false) {
-            alert("No user available ...\nTry back after sometime");
+            alert("No agents available ...\nTry back after sometime");
             location.reload();
         }
     }
@@ -113,7 +196,7 @@ export default class MainpageComponent extends Component {
         }
     }
     handleask(toName) {
-        var ask = confirm(toName+": This customer wants to connect with you");
+        var ask = window.confirm(toName+": This customer wants to connect with you");
         if(ask == true && this.alertbool == true) {
             this.alertbool = false;
             let packet = {
@@ -166,7 +249,7 @@ export default class MainpageComponent extends Component {
             }
             case "message":
             {
-                console.log(data);
+                this.insertMessagetoDOM(data,false);
                 break;
             }
             case "ask":
