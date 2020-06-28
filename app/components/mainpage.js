@@ -1,5 +1,5 @@
 import Component from '@glimmer/component';
-import { action, computed } from '@ember/object';
+import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import jQuery from 'jquery'
 import {inject as service} from '@ember/service';
@@ -14,15 +14,17 @@ export default class MainpageComponent extends Component {
     @tracked canSend = true;
     @tracked textInput="";
     @tracked name = null;
+    @tracked isAgent = null;
+    
     conn = null;
-    isAgent = null;
     alertbool = true;
     to = null;
     time = null;
-
+    //When customer/agent selects the drop down
     @action dropdown(value) {
         this.isAgentInput = value;
     }
+    //When customer/agent clicks Signin button
     @action onLogin() {
         if(this.nameInput != undefined && this.passwordInput != undefined && this.isAgentInput != undefined) {
             setInterval(() => {
@@ -36,6 +38,12 @@ export default class MainpageComponent extends Component {
             location.reload();
         }
     }
+    //When agent clicks Logout button
+    @action onLogout() {
+        this.conn.close();
+        location.reload();
+    }
+    //When customer/agent clicks Send button
     @action onSend() {
         var val = this.textInput;
         if(val.length > 0) {
@@ -51,13 +59,17 @@ export default class MainpageComponent extends Component {
             this.sendData(packet);
         }
     }
+    //When customer/agent wants to clear the messages
     @action onClear() {
         document.getElementById("messages").textContent = '';
     }
+    //When customer/agent clicks Disconnect button
     @action onDisconnect() {
+        //if Customer clicks just close the connection
         if(this.isAgent == false) {
             this.conn.close();
-        } else {
+            location.reload();
+        } else { //if Agent clicks then make the agent available to connect to next customer
             let packet = {
                 type:"leave",
                 isAgent:this.isAgent,
@@ -68,6 +80,7 @@ export default class MainpageComponent extends Component {
             this.sendData(packet);
         }
     }
+    //When the message should be displayed to the chat area
     insertMessagetoDOM(packet,isFromMe) {
         console.log("Insert message to DOM ",packet,isFromMe);
         const chatArea = document.querySelector("#messages");
@@ -97,6 +110,7 @@ export default class MainpageComponent extends Component {
         chatArea.appendChild(message);
         chatArea.scrollTop = chatArea.scrollHeight - chatArea.clientHeight;
     }
+    //Sends request to backend and receives response
     sendReq() {
         jQuery.ajax({
             url:"http://localhost:8080/CustomerAgent/login",
@@ -110,6 +124,7 @@ export default class MainpageComponent extends Component {
             })
         }).then((response) => {
             console.log(response);
+            //if Success then login and initialize the socket connection
             if(response == "SUCCESS") {
                 this.name = this.nameInput;
                 this.loginpage = false;
@@ -130,6 +145,7 @@ export default class MainpageComponent extends Component {
     }
 
 
+    //Initialize the socket connection
     initialize() {
         const socket = this.websockets.socketFor('ws://localhost:9090/');
         let packet = {
@@ -142,11 +158,13 @@ export default class MainpageComponent extends Component {
         socket.on('open',() => {
             console.log("Connected to the server");
             this.conn = socket;
+            //if connection is opened then send details to the server
             this.sendData(packet);
         });
         socket.on('close',function(){
-            console.log("Not connected to ther server");
+            console.log("Socket is closed");
         });  
+        //on receiving the message call the handler to handle the packet
         socket.on('message',(message) => {
             var data = JSON.parse(message.data);
             console.log(data);
@@ -156,21 +174,26 @@ export default class MainpageComponent extends Component {
             this.alertbool = true;
             this.status = "Wait for Customer to Connect";
         } else {
+            this.canDisconnect = false;
             this.status = "Wait for Agent to Connect";
         }
     }
+    //sends packet to the server
     sendData(packet) {
         this.conn.send(JSON.stringify(packet));
     }
 
-
+    //When connected display the person connected to..
     handlelogin(toName) {
+        //once connected enable all buttons to access
         this.alertbool = false;
         this.to = toName;
         this.canDisconnect = false;
         this.canSend = false;
         this.status = "Connected to "+toName;
     }
+    //if Agent leaves then customer should be informed and reload the page
+    //if Customer leaves then agent socket is not closed..he/she will be made available
     handleleave() {
         if(this.isAgent == true) {
             this.alertbool = true;
@@ -183,18 +206,21 @@ export default class MainpageComponent extends Component {
             location.reload();
         }
     }
+    //if no agents available to connect to the customer
     handlenouser() {
         if(this.isAgent == false) {
             alert("No agents available ...\nTry back after sometime");
             location.reload();
         }
     }
+    //if everyone rejected customer's request
     handlebusy() {
         if(this.isAgent == false) {
             alert("Everyone rejected your request...\nTry back after sometime");
             location.reload();
         }
     }
+    //ask agent whether he/she wants to connect to the customer
     handleask(toName) {
         var ask = window.confirm(toName+": This customer wants to connect with you");
         if(ask == true && this.alertbool == true) {
@@ -225,6 +251,7 @@ export default class MainpageComponent extends Component {
     }
 
 
+    //Main handler which handles the incoming packet from the server
     handler(data) {
         switch(data.type) {
             case "connected":
@@ -259,7 +286,7 @@ export default class MainpageComponent extends Component {
             }
             default:
             {
-                console.log("No such handler");
+                console.log("No such case type exist");
                 break;
             }
         }

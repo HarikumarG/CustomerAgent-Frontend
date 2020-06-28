@@ -1,14 +1,3 @@
-{{!-- <html>
-<label for="name">Name </label>
-    {{input value=nameInput placeholder="enter name"}}
-<label for="password">Password  </label> 
-    {{input value=passwordInput type="password" placeholder="enter password"}}
-<label for="password">Are u an agent  </label> 
-    {{input value=isAgentInput placeholder="enter true or false"}}
-<button type="button" {{action 'onLogin' on="click" }}>Login</button>
-<br>
-<label for="status">Status: </label>{{this.status}}
-</html> --}}
 {{#if loginpage}}
 <div class="container" >
     <div class="modal-dialog modal-dialog-centered">
@@ -45,6 +34,9 @@
                     </span>
                     <button type="button" class="btn-danger btn btn-sm" disabled={{canDisconnect}} {{action 'onDisconnect' on="click" }}>Disconnect</button>
                     <button type="button" class="btn-primary btn btn-sm space" {{action 'onClear' on="click" }}>Clear</button>
+                    {{#if isAgent}}
+                        <button type="button" class="btn-success btn btn-sm space" {{action 'onLogout' on="click" }}>LogOut</button>
+                    {{/if}}                    
                     <span class="input-group">
                         <small class="form-text text-muted">Logged in as: {{ name }}</small>
                     </span>                    
