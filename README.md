@@ -1,7 +1,6 @@
 # customer-agent
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+This project establishes the chat communication between customer and agent
 
 ## Prerequisites
 
@@ -11,6 +10,11 @@ You will need the following things properly installed on your computer.
 * [Node.js](https://nodejs.org/) (with npm)
 * [Ember CLI](https://ember-cli.com/)
 * [Google Chrome](https://google.com/chrome/)
+* git clone https://github.com/HarikumarG/CustomerAgent-Backend.git and https://github.com/HarikumarG/CustomerAgent-Webserver.git
+* Build and Run both repository to run this frontend code
+* Note:
+* 1.0. If you want to check and run frontend alone then "open .ember-cli file" which is in project folder and remove the proxy.
+* 1.1. Open mainpage.js file in component and comment the ajax request which is being sent to the backend and also comment websocket initialization
 
 ## Installation
 
@@ -22,36 +26,3 @@ You will need the following things properly installed on your computer.
 
 * `ember serve`
 * Visit your app at [http://localhost:4200](http://localhost:4200).
-* Visit your tests at [http://localhost:4200/tests](http://localhost:4200/tests).
-
-### Code Generators
-
-Make use of the many generators for code, try `ember help generate` for more details
-
-### Running Tests
-
-* `ember test`
-* `ember test --server`
-
-### Linting
-
-* `npm run lint:hbs`
-* `npm run lint:js`
-* `npm run lint:js -- --fix`
-
-### Building
-
-* `ember build` (development)
-* `ember build --environment production` (production)
-
-### Deploying
-
-Specify what it takes to deploy your app.
-
-## Further Reading / Useful Links
-
-* [ember.js](https://emberjs.com/)
-* [ember-cli](https://ember-cli.com/)
-* Development Browser Extensions
-  * [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
-  * [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
