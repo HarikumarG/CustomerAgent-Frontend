@@ -75,7 +75,7 @@ export default class MainpageComponent extends Component {
                 isAgent:this.isAgent,
                 name:this.name,
                 to:this.to,
-                message:null
+                message:"null"
             }
             this.sendData(packet);
         }
@@ -147,13 +147,13 @@ export default class MainpageComponent extends Component {
 
     //Initialize the socket connection
     initialize() {
-        const socket = this.websockets.socketFor('ws://localhost:9090/');
+        const socket = this.websockets.socketFor('ws://localhost:8080/CustomerAgent/chat');
         let packet = {
             type:"login",
             isAgent:this.isAgent,
             name:this.name,
-            to:null,
-            message:null
+            to:"null",
+            message:"null"
         }
         socket.on('open',() => {
             console.log("Connected to the server");
@@ -197,7 +197,7 @@ export default class MainpageComponent extends Component {
     handleleave() {
         if(this.isAgent == true) {
             this.alertbool = true;
-            this.to = null;
+            this.to = "null";
             this.canDisconnect = true;
             this.canSend = true;
             this.status = "Wait for Customer to Connect";
