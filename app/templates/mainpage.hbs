@@ -1,1 +1,37 @@
-<Mainpage/>
+<style>
+    @keyframes dropdown {
+        0% {
+            margin-top: 0%;
+        }
+
+        100% {
+            margin-top: 50%;
+        }
+    }
+
+    .container {
+        height: 100%;
+    }
+
+    .homepage {
+        background-color: rgb(235, 233, 233);
+        padding: 50px;
+        display: inline-block;
+        text-align: center;
+        margin-top: 0%;
+        position: relative;
+        animation: forwards;
+        animation-name: dropdown;
+        animation-duration: 1.5s;
+    }
+</style>
+<div class="container h-100">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-* justify-content-center">
+            <div class="homepage border rounded-circle">
+                <LinkTo @route="customer" class="btn btn-primary">Customer</LinkTo><br> <br>
+                <LinkTo @route="agent" class="btn btn-primary">Agent</LinkTo>
+            </div>
+        </div>
+    </div>
+</div>

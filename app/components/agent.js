@@ -6,7 +6,7 @@ import {inject as service} from '@ember/service';
 
 export default class MainpageComponent extends Component {
     @service ('websockets') websockets;
-    @tracked status = "Logged in";
+    @tracked status = "Wait for Customer to Connect";
     @tracked loginpage = true;
     @tracked chatpage = false;
     @tracked date = null;
@@ -14,19 +14,15 @@ export default class MainpageComponent extends Component {
     @tracked canSend = true;
     @tracked textInput="";
     @tracked name = null;
-    @tracked isAgent = null;
-    
+    @tracked onchat= null;
+    @tracked to = [];
+
+    isAgent = "true";
     conn = null;
-    alertbool = true;
-    to = null;
     time = null;
-    //When customer/agent selects the drop down
-    @action dropdown(value) {
-        this.isAgentInput = value;
-    }
-    //When customer/agent clicks Signin button
+    //When agent clicks Signin button
     @action onLogin() {
-        if(this.nameInput != undefined && this.passwordInput != undefined && this.isAgentInput != undefined) {
+        if(this.nameInput != undefined && this.passwordInput != undefined) {
             setInterval(() => {
                 var d = new Date();    
                 this.date = d.toDateString(); 
@@ -43,41 +39,43 @@ export default class MainpageComponent extends Component {
         this.conn.close();
         location.reload();
     }
-    //When customer/agent clicks Send button
-    @action onSend() {
-        var val = this.textInput;
-        if(val.length > 0) {
-            this.textInput = "";
-            let packet = {
-               type:"message",
-                isAgent:this.isAgent,
-                name:this.name,
-                to:this.to,
-                message:val
+    //When agent clicks Send button
+    @action onSend(sendChat) {
+        if(sendChat != null) {
+            var val = this.textInput;
+            if(val.length > 0) {
+                this.textInput = "";
+                let packet = {
+                    type:"message",
+                    isAgent:this.isAgent,
+                    name:this.name,
+                    to:sendChat,
+                    message:val
+                }
+                this.insertMessagetoDOM(packet,true);
+                this.sendData(packet);
             }
-            this.insertMessagetoDOM(packet,true);
-            this.sendData(packet);
+        } else {
+            alert("Select a customer to send");
         }
     }
-    //When customer/agent wants to clear the messages
+    //When agent wants to clear the messages
     @action onClear() {
         document.getElementById("messages").textContent = '';
     }
-    //When customer/agent clicks Disconnect button
-    @action onDisconnect() {
-        //if Customer clicks just close the connection
-        if(this.isAgent == false) {
-            this.conn.close();
-            location.reload();
-        } else { //if Agent clicks then make the agent available to connect to next customer
+    //When agent clicks Disconnect button
+    @action onDisconnect(disconnectChat) {
+        if(disconnectChat != null) {
             let packet = {
                 type:"leave",
                 isAgent:this.isAgent,
                 name:this.name,
-                to:this.to,
+                to:disconnectChat,
                 message:"null"
             }
             this.sendData(packet);
+        } else {
+            alert("Select a customer to disconnect");
         }
     }
     //When the message should be displayed to the chat area
@@ -120,7 +118,7 @@ export default class MainpageComponent extends Component {
             data: JSON.stringify({
                 "name":this.nameInput,
 	            "password":this.passwordInput,
-	            "isAgent": this.isAgentInput
+	            "isAgent": this.isAgent
             })
         }).then((response) => {
             console.log(response);
@@ -129,11 +127,9 @@ export default class MainpageComponent extends Component {
                 this.name = this.nameInput;
                 this.loginpage = false;
                 this.chatpage = true;
-                if(this.isAgentInput == "true") {
-                    this.isAgent = true;
-                } else {
-                    this.isAgent = false;
-                }
+                window.addEventListener('popstate', function (event) {
+                    location.reload();
+                });
                 this.initialize();
             } else {
                 alert("Invalid credentials");
@@ -170,61 +166,45 @@ export default class MainpageComponent extends Component {
             console.log(data);
             this.handler(data);
         });
-        if(this.isAgent) {
-            this.alertbool = true;
-            this.status = "Wait for Customer to Connect";
-        } else {
-            this.canDisconnect = false;
-            this.status = "Wait for Agent to Connect";
-        }
     }
     //sends packet to the server
     sendData(packet) {
         this.conn.send(JSON.stringify(packet));
     }
 
+
     //When connected display the person connected to..
-    handlelogin(toName) {
+    handlelogin(sendto) {
+        this.to = [...this.to,{
+            sendto
+        }];
+        this.status = "";
         //once connected enable all buttons to access
-        this.alertbool = false;
-        this.to = toName;
         this.canDisconnect = false;
         this.canSend = false;
-        this.status = "Connected to "+toName;
     }
-    //if Agent leaves then customer should be informed and reload the page
-    //if Customer leaves then agent socket is not closed..he/she will be made available
-    handleleave() {
-        if(this.isAgent == true) {
-            this.alertbool = true;
-            this.to = "null";
+    //if Customer disconnects then agent should be notified
+    handleleave(data) {
+        var i = this.to.length;
+        while(i--) {
+            if(this.to[i] && this.to[i].hasOwnProperty("sendto") && this.to[i]["sendto"] === data.to) {
+                this.to.splice(i,1);
+                this.to = [...this.to];                    
+            }
+        }
+        if(this.to.length == 0) {
+            this.status = "Wait for Customer to Connect";
             this.canDisconnect = true;
             this.canSend = true;
-            this.status = "Wait for Customer to Connect";
-        } else {
-            alert("Agent disconnected...\nTry back after some time");
-            location.reload();
         }
-    }
-    //if no agents available to connect to the customer
-    handlenouser() {
-        if(this.isAgent == false) {
-            alert("No agents available ...\nTry back after sometime");
-            location.reload();
-        }
-    }
-    //if everyone rejected customer's request
-    handlebusy() {
-        if(this.isAgent == false) {
-            alert("Everyone rejected your request...\nTry back after sometime");
-            location.reload();
+        if(data.to != "null") {
+            alert(data.to+": This User Left...");
         }
     }
     //ask agent whether he/she wants to connect to the customer
     handleask(toName) {
         var ask = window.confirm(toName+": This customer wants to connect with you");
-        if(ask == true && this.alertbool == true) {
-            this.alertbool = false;
+        if(ask == true) {
             let packet = {
                 type:"askresponse",
                 isAgent:this.isAgent,
@@ -234,11 +214,7 @@ export default class MainpageComponent extends Component {
             }
             this.sendData(packet);
         } else {
-            if(ask != true) {
-                console.log("You have given response as no");
-            } else if(this.alertbool == false) {
-                alert("You already gave response as true");
-            }
+            console.log("You have given response as no");
             let packet = {
                 type:"askresponse",
                 isAgent:this.isAgent,
@@ -261,17 +237,7 @@ export default class MainpageComponent extends Component {
             }
             case "leave":
             {
-                this.handleleave();
-                break;
-            }
-            case "noagent":
-            {
-                this.handlenouser();
-                break;
-            }
-            case "busy":
-            {
-                this.handlebusy();
+                this.handleleave(data);
                 break;
             }
             case "message":
@@ -290,5 +256,10 @@ export default class MainpageComponent extends Component {
                 break;
             }
         }
+    }
+
+    onChat(toName) {
+        this.onClear();
+        this.onchat = toName;
     }
 }

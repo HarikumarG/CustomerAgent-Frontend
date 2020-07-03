@@ -1,0 +1,173 @@
+<style>
+    .space {
+        margin-left: 5px;
+    }
+
+    .chat-body {
+        padding-top: 0rem;
+    }
+
+    .content {
+        display: flex;
+        background-color: rgb(235, 233, 233);
+        border-radius: 3px;
+        height: 50vh;
+        max-height: 600px;
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .messages {
+        flex-grow: 1;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        overflow: auto;
+    }
+
+    .chat_input {
+        width: 100%;
+    }
+
+    .text-message {
+        flex-wrap: nowrap;
+    }
+
+    .date {
+        text-align: center;
+        margin-bottom: .25rem;
+    }
+
+    .time {
+        text-align: right;
+        font-size: x-small;
+    }
+
+    .message {
+        display: flex;
+        flex-direction: column;
+        font-size: small;
+    }
+
+    .message--mine {
+        align-items: flex-end;
+        padding-left: 50px;
+        padding-right: 20px;
+    }
+
+    .message--theirs {
+        align-items: flex-start;
+        padding-left: 20px;
+        padding-right: 50px;
+    }
+
+    .message__name {
+        padding: 10px 0;
+    }
+
+    .message__bubble {
+        padding: 10px;
+        border-radius: 3px;
+    }
+
+    .message--theirs .message__bubble {
+        background: #6363bf;
+        color: white;
+    }
+
+    .message--mine .message__bubble {
+        background: rgba(156, 172, 172, 0.2);
+    }
+
+    .chat-list {
+        margin: 1.75rem auto;
+        max-height: 600px;
+        overflow: auto;
+        width: 100%;
+    }
+    .chat-box {
+        max-width: none;
+    }
+    .combine {
+        padding-left: 0%;
+        padding-right: 0%;
+    }
+    .btn-hovers:hover {
+        color: white;
+        background-color: green;
+    }
+</style>
+{{#if loginpage}}
+<div class="container">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agent Login</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    {{input value=nameInput class="form-control" placeholder="Your User Name"}} <br>
+                    {{input value=passwordInput class="form-control" type="password" placeholder="Your password"}}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" {{action 'onLogin' on="click" }}>Sign In</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}
+{{#if chatpage}}
+<div class="container">
+    <div class="row justify-content-md-center">
+        <div class="col-3 combine">
+            <ul class="list-group chat-list">
+                {{#each this.to as |sendTo|}}
+                    <button type="button" class="list-group-item list-group-item-action btn-hovers" {{action 'onChat' sendTo.sendto on="click"}}>{{sendTo.sendto}}</button>
+                {{/each}}
+            </ul>
+        </div>
+        <div class="col-9 combine">
+            <div class="modal-dialog modal-dialog-centered chat-box">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="input-group-btn">
+                            <span class="input-group">
+                                <h5 class="form-text text-muted">Connected to: {{ onchat }}</h5>
+                            </span>
+                            <button type="button" class="btn-danger btn btn-sm" disabled={{canDisconnect}}
+                                {{action 'onDisconnect' onchat on="click" }}>Disconnect</button>
+                            <button type="button" class="btn-primary btn btn-sm space"
+                                {{action 'onClear' on="click" }}>Clear</button>
+                            {{#if isAgent}}
+                            <button type="button" class="btn-success btn btn-sm space"
+                                {{action 'onLogout' on="click" }}>LogOut</button>
+                            {{/if}}
+                            <span class="input-group">
+                                <small class="form-text text-muted">Logged in as: {{ name }}</small>
+                            </span>
+                            <span class="input-group">
+                                <small class="form-text text-muted">{{status}}</small>
+                            </span>
+                        </span>
+                    </div>
+                    <div class="modal-body chat-body">
+                        <small class="form-text text-muted date">{{date}}</small>
+                        <div class="content">
+                            <div class="messages" id="messages"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group text-message">
+                            {{input value=textInput class="form-control input-sm chat_input" placeholder="your message here..."}}
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-primary" disabled={{canSend}}
+                                    {{action 'onSend' onchat on="click" }}>Send</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}
