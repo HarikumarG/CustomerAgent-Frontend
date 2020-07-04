@@ -109,6 +109,7 @@ export default class CustomerComponent extends Component {
                 this.loginpage = false;
                 this.chatpage = true;
                 window.addEventListener('popstate', function (event) {
+                    this.conn.close();
                     location.reload();
                 });
                 this.initialize();
@@ -166,12 +167,14 @@ export default class CustomerComponent extends Component {
     //if Agent leaves then customer should be informed and reload the page
     handleleave(data) {
         alert("Agent disconnected...\nTry back after some time");
+        this.conn.close();
         location.reload();
     }
     //if no agents available to connect to the customer
     handlenouser() {
         if(this.isAgent == "false") {
             alert("No agents available ...\nTry back after sometime");
+            this.conn.close();
             location.reload();
         }
     }
@@ -179,6 +182,7 @@ export default class CustomerComponent extends Component {
     handlebusy() {
         if(this.isAgent == "false") {
             alert("Everyone rejected your request...\nTry back after sometime");
+            this.conn.close();
             location.reload();
         }
     }

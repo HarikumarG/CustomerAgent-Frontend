@@ -128,6 +128,7 @@ export default class MainpageComponent extends Component {
                 this.loginpage = false;
                 this.chatpage = true;
                 window.addEventListener('popstate', function (event) {
+                    this.conn.close();
                     location.reload();
                 });
                 this.initialize();
@@ -186,6 +187,7 @@ export default class MainpageComponent extends Component {
     //if Customer disconnects then agent should be notified
     handleleave(data) {
         var i = this.to.length;
+        this.onchat = null;
         while(i--) {
             if(this.to[i] && this.to[i].hasOwnProperty("sendto") && this.to[i]["sendto"] === data.to) {
                 this.to.splice(i,1);
@@ -198,7 +200,7 @@ export default class MainpageComponent extends Component {
             this.canSend = true;
         }
         if(data.to != "null") {
-            alert(data.to+": This User Left...");
+            alert(data.to+": This User disconnected successfully...");
         }
     }
     //ask agent whether he/she wants to connect to the customer
