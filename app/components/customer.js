@@ -15,19 +15,23 @@ export default class CustomerComponent extends Component {
     @tracked textInput="";
     @tracked name = null;
     
+    bot = false;
     isAgent = "false";
     conn = null;
     to = null;
     time = null;
-
+    
+    constructor() {
+        super(...arguments);
+        setInterval(() => {
+            var d = new Date();    
+            this.date = d.toDateString(); 
+            this.time = d.getHours()+":"+d.getMinutes();
+        }, 1000);
+    }
     //When customer clicks Signin button
     @action onLogin() {
         if(this.nameInput != undefined && this.passwordInput != undefined) {
-            setInterval(() => {
-                var d = new Date();    
-                this.date = d.toDateString(); 
-                this.time = d.getHours()+":"+d.getMinutes();
-            }, 1000);
             this.sendReq();
         } else {
             alert("Fill all the fields");
@@ -40,14 +44,21 @@ export default class CustomerComponent extends Component {
         if(val.length > 0) {
             this.textInput = "";
             let packet = {
-               type:"message",
+                type:"message",
                 isAgent:this.isAgent,
                 name:this.name,
                 to:this.to,
                 message:val
             }
             this.insertMessagetoDOM(packet,true);
-            this.sendData(packet);
+            if(this.bot == false) {
+                this.sendData(packet);
+            } else {
+                console.log(val);
+                this.conn.close();
+                alert("Your issue is saved...");
+                location.reload();
+            }
         }
     }
     //When customer wants to clear the messages
@@ -173,9 +184,20 @@ export default class CustomerComponent extends Component {
     //if no agents available to connect to the customer
     handlenouser() {
         if(this.isAgent == "false") {
-            alert("No agents available ...\nTry back after sometime");
-            this.conn.close();
-            location.reload();
+            // alert("No agents available ...\nTry back after sometime");
+            // this.conn.close();
+            // location.reload();
+            this.bot = true;
+            this.canSend = false;
+            this.to = "Bot";
+            var txt = "Hi "+this.name+"...Thanks for waiting..We are sorry for your inconvenience..But currently there is no agent available online..Please type a detailed description of your issue..Our support agent will reply to your email as soon as possible";
+
+            this.status = "Connected to ChatBot";
+            let packet = {
+                name:"Bot",
+                message:txt
+            }
+            this.insertMessagetoDOM(packet,false);
         }
     }
     //if everyone rejected customer's request
