@@ -28,6 +28,13 @@ export default class CustomerComponent extends Component {
             this.date = d.toDateString(); 
             this.time = d.getHours()+":"+d.getMinutes();
         }, 1000);
+        this.notifyMe();
+        window.addEventListener('focus',()=>{
+            this.active = true;
+        });
+        window.addEventListener('blur',()=> {
+            this.active = false;
+        });
     }
     //When customer clicks Signin button
     @action onLogin() {
@@ -208,7 +215,14 @@ export default class CustomerComponent extends Component {
             location.reload();
         }
     }
-    
+    //for incoming messages from agent
+    handlemessage(data) {
+        if (Notification.permission === "granted" && this.active == false) {
+            var msg = data.name+": Sent you a message";
+            var notification = new Notification(msg);
+        }
+        this.insertMessagetoDOM(data,false);
+    }
 
     //Main handler which handles the incoming packet from the server
     handler(data) {
@@ -235,7 +249,7 @@ export default class CustomerComponent extends Component {
             }
             case "message":
             {
-                this.insertMessagetoDOM(data,false);
+                this.handlemessage(data);
                 break;
             }
             default:
@@ -243,6 +257,19 @@ export default class CustomerComponent extends Component {
                 console.log("No such case type exist");
                 break;
             }
+        }
+    }
+    //Request permission to enable notifications
+    notifyMe() {
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notification");
+        }
+        else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(function (permission) {
+                if (permission === "granted") {
+                    console.log("Notification is active");
+                }
+            });
         }
     }
 }

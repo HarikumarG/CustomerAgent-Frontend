@@ -20,14 +20,28 @@ export default class MainpageComponent extends Component {
     isAgent = "true";
     conn = null;
     time = null;
+    active = true;
+
+    constructor() {
+        super(...arguments);
+        setInterval(() => {
+            var d = new Date();    
+            this.date = d.toDateString(); 
+            this.time = d.getHours()+":"+d.getMinutes();
+        }, 1000);
+        this.notifyMe();
+        window.addEventListener('focus',()=>{
+            this.active = true;
+            console.log(this.active);
+        });
+        window.addEventListener('blur',()=> {
+            this.active = false;
+            console.log(this.active);
+        });
+    }
     //When agent clicks Signin button
     @action onLogin() {
         if(this.nameInput != undefined && this.passwordInput != undefined) {
-            setInterval(() => {
-                var d = new Date();    
-                this.date = d.toDateString(); 
-                this.time = d.getHours()+":"+d.getMinutes();
-            }, 1000);
             this.sendReq();
         } else {
             alert("Fill all the fields");
@@ -203,6 +217,13 @@ export default class MainpageComponent extends Component {
             alert(data.to+": This User disconnected successfully...");
         }
     }
+    handlemessage(data) {
+        if (Notification.permission === "granted" && this.active == false) {
+            var msg = data.name+": Sent you a message";
+            var notification = new Notification(msg);
+        }
+        this.insertMessagetoDOM(data,false);
+    }
     //ask agent whether he/she wants to connect to the customer
     handleask(toName) {
         var ask = window.confirm(toName+": This customer wants to connect with you");
@@ -244,7 +265,7 @@ export default class MainpageComponent extends Component {
             }
             case "message":
             {
-                this.insertMessagetoDOM(data,false);
+                this.handlemessage(data);
                 break;
             }
             case "ask":
@@ -259,9 +280,22 @@ export default class MainpageComponent extends Component {
             }
         }
     }
-
+    //when agent switch chat tabs
     onChat(toName) {
-        this.onClear();
+        //this.onClear();
         this.onchat = toName;
+    }
+    //Request permission to enable notifications
+    notifyMe() {
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notification");
+        }
+        else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(function (permission) {
+                if (permission === "granted") {
+                    console.log("Notification is active");
+                }
+            });
+        }
     }
 }
