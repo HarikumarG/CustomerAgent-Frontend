@@ -2,6 +2,10 @@
 
 This project establishes the chat communication between customer and agent
 
+Backend is developed using java and spring
+
+https://github.com/HarikumarG/CustomerAgent-Backend
+
 ## Prerequisites
 
 You will need the following things properly installed on your computer.
