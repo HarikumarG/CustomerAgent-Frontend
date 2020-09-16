@@ -1,7 +1,11 @@
 # customer-agent
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+
+This project establishes the chat communication between customer and agent
+
+Backend is developed using java and spring
+
+https://github.com/HarikumarG/CustomerAgent-Backend (branch masterv1)
 
 ## Prerequisites
 
